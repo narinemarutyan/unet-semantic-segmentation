@@ -12,6 +12,7 @@ segmentation-models = "^1.0.1"
 keras = "^3.4.1"
 matplotlib = "^3.9.1"
 tensorflow = "^2.17.0"
+opencv-python = "^4.10.0.84"
 
 
 [build-system]
