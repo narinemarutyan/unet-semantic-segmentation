@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "unet-semantic-segmentation"
+version = "0.1.0"
+description = ""
+authors = ["narinemarutyan <narine_m@purlin.com>"]
+readme = "README.md"
+packages = [{include = "unet_semantic_segmentation"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+segmentation-models = "^1.0.1"
+keras = "^3.4.1"
+matplotlib = "^3.9.1"
+tensorflow = "^2.17.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
