@@ -20,7 +20,7 @@ import segmentation_models as sm
 
 
 def train_model(X_train, y_train, X_test, y_test, total_loss, n_classes=6):
-    model = multi_unet_model(n_classes=n_classes, IMG_HEIGHT=256, IMG_WIDTH=256, IMG_CHANNELS=3)
+    model = multi_unet_model(n_classes=n_classes, img_height=256, img_width=256, img_channels=3)
     metrics = ['accuracy', jacard_coef]
     model.compile(optimizer='adam', loss=total_loss, metrics=metrics)
     model.summary()
