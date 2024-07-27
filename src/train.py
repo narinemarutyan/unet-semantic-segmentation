@@ -8,45 +8,40 @@ import matplotlib.pyplot as plt
 import numpy as np
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
-
 from src.model import multi_unet_model, jacard_coef
-from .utils import class_colors, rgb_to_2D_label
+from .utils import class_colors, rgb_to_2D_label, dice_loss_plus_1focal_loss, load_model_for_inference
 
 import os
 
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 
-import segmentation_models as sm
 
-
-def train_model(X_train, y_train, X_test, y_test, total_loss, n_classes=6):
+def train_model(X_train, y_train, X_test, y_test, n_classes=6):
     model = multi_unet_model(n_classes=n_classes, img_height=256, img_width=256, img_channels=3)
     metrics = ['accuracy', jacard_coef]
+    total_loss = dice_loss_plus_1focal_loss()
     model.compile(optimizer='adam', loss=total_loss, metrics=metrics)
     model.summary()
     history = model.fit(X_train, y_train,
                         batch_size=16,
                         verbose=1,
-                        epochs=100,
+                        epochs=1,
                         validation_data=(X_test, y_test),
                         shuffle=False)
-    return history
+    return model, history
 
 
 def main():
     print("Starting the segmentation model training...")
 
-    # Set the root directory for your dataset
     root_directory = 'datasets/aerial_image_segmentation/'
     print(f"Root directory set to {root_directory}")
 
-    # Load and preprocess images and masks
     image_dataset = load_images(root_directory)
     print("Images loaded successfully.")
     mask_dataset = load_masks(root_directory)
     print("Masks loaded successfully.")
 
-    # Convert RGB masks to 2D labels
     labels = []
     for mask in mask_dataset:
         label = rgb_to_2D_label(mask, class_colors)
@@ -63,17 +58,12 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(image_dataset, labels_cat, test_size=0.20, random_state=42)
     print("Data split into training and testing sets.")
 
-    weights = [0.1666, 0.1666, 0.1666, 0.1666, 0.1666, 0.1666]
-    dice_loss = sm.losses.DiceLoss(class_weights=weights)
-    focal_loss = sm.losses.CategoricalFocalLoss()
-    total_loss = dice_loss + (1 * focal_loss)
-    print("Loss functions and weights set.")
-
-    # Train the model
-    history = train_model(X_train, y_train, X_test, y_test, total_loss, n_classes)
+    model, history = train_model(X_train, y_train, X_test, y_test, n_classes)
     print("Model training completed.")
 
-    # Plot the training and validation accuracy and loss
+    save_model_path = 'models/segmentation_model.h5'
+    model.save(save_model_path)
+
     loss = history.history['loss']
     val_loss = history.history['val_loss']
     epochs = range(1, len(loss) + 1)
@@ -97,6 +87,22 @@ def main():
     plt.legend()
     plt.show()
 
+    loaded_model = load_model_for_inference(save_model_path)
+
+    test_image = X_test[0]
+    prediction = loaded_model.predict(np.expand_dims(test_image, axis=0))
+    predicted_mask = np.argmax(prediction, axis=-1)
+
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 2, 1)
+    plt.imshow(test_image)
+    plt.title('Test Image')
+    plt.subplot(1, 2, 2)
+    plt.imshow(predicted_mask[0], cmap='jet')
+    plt.title('Predicted Mask')
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
+    loaded_model = load_model_for_inference('models/segmentation_model.h5')
