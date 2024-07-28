@@ -22,7 +22,6 @@ def detect_changes(image_path1: str, image_path2: str) -> cv2.Mat:
 
 def main(args):
     model = load_model_for_inference(args.model_path)
-
     change_mask = detect_changes(args.image_path1, args.image_path2)
 
     segmented_mask_image_path1 = run_inference(model=model, image_path=args.image_path1, patch_size=args.patch_size)
@@ -31,9 +30,9 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Change detection arguments')
+    parser.add_argument("--model_path", type=str, required=True, help="Path to the segmentation model")
     parser.add_argument("--image_path1", type=str, required=True, help="Path to the 1st input image.")
     parser.add_argument("--image_path2", type=str, required=True, help="Path to the 2nd input image.")
-    parser.add_argument("--model_path", type=str, required=True, help="Path to the segmentation model")
     parser.add_argument("--patch_size", type=int, default=256, help="Patch sizes")
 
     args = parser.parse_args()
