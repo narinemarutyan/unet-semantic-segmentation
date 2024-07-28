@@ -67,7 +67,7 @@ def main(args):
     plt.imshow(decode_segmentation_mask(segmented_mask_changed_image), alpha=0.5)
     plt.imshow(change_mask, cmap='gray', alpha=0.5)
     plt.title('Overlay of Changes and Segmentation')
-
+    # plt.savefig("change_detection.png")
     plt.show()
 
 

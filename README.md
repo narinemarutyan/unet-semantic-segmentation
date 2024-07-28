@@ -30,9 +30,10 @@ python -m src.train --root_directory "datasets/aerial_image_segmentation" --save
 ```bash
 python -m src.inference_segment --model_path "models/unet_100_epochs.h5" --image_path "example_images/original_image.jpg"
 ```
+![Plot](example_images/segmentation.png)
 
 ## Running change detection inference
 ```bash
 python -m src.change_detection --model_path "models/unet_100_epochs.h5" --original_image "example_images/original_image.jpg" --changed_image "example_images/changed_image.jpg"
 ```
-
+![Plot](example_images/change_detection.png)

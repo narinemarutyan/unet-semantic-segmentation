@@ -116,6 +116,7 @@ def main(args):
     plt.subplot(1, 2, 2)
     plt.imshow(decoded_mask)
     plt.title('Predicted Mask')
+    # plt.savefig("segmentation.png")
     plt.show()
 
 
