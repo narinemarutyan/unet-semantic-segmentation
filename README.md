@@ -33,6 +33,6 @@ python -m src.inference_segment --model_path "models/unet_100_epochs.h5" --image
 
 ## Running change detection inference
 ```bash
-python -m src.change_detection --model_path "models/unet_100_epochs.h5" --image_path1 "example_images/changed_image.jpg" --image_path2 "example_images/original_image.jpg"
+python -m src.change_detection --model_path "models/unet_100_epochs.h5" --original_image "example_images/original_image.jpg" --changed_image "example_images/changed_image.jpg"
 ```
 

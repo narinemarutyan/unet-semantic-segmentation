@@ -1,13 +1,14 @@
 import argparse
-
 import cv2
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+import numpy as np
 
-from src.inference_segment import run_inference, decode_segmentation_mask
+from src.inference_segment import decode_segmentation_mask, reconstruct_patches
+from src.preprocessing import preprocess
 from src.utils import load_model_for_inference
 
 
-def detect_changes(image_path1: str, image_path2: str) -> cv2.Mat:
+def detect_changes(image_path1: str, image_path2: str) -> np.ndarray:
     image1 = cv2.imread(image_path1)
     image2 = cv2.imread(image_path2)
 
@@ -21,42 +22,60 @@ def detect_changes(image_path1: str, image_path2: str) -> cv2.Mat:
     return thresh
 
 
+def run_inference(model, image_path: str, patch_size: int) -> np.ndarray:
+    preprocessed_image, original_shape = preprocess(img_path=image_path,
+                                                    dataset=[],
+                                                    patch_size=patch_size,
+                                                    resizing="resize")
+    preprocessed_image = np.array(preprocessed_image)
+    preprocessed_image = preprocessed_image.reshape((-1, patch_size, patch_size, 3))
+    predictions = model.predict(preprocessed_image)
+    predicted_mask = np.argmax(predictions, axis=-1)
+    full_mask = reconstruct_patches(patches=predicted_mask,
+                                    patch_size=patch_size,
+                                    original_shape=original_shape)
+    return full_mask
+
+
 def main(args):
     model = load_model_for_inference(args.model_path)
-    change_mask = detect_changes(args.image_path1, args.image_path2)
 
-    segmented_mask_image_path1 = run_inference(model=model, image_path=args.image_path1, patch_size=args.patch_size)
-    segmented_mask_image_path2 = run_inference(model=model, image_path=args.image_path2, patch_size=args.patch_size)
+    change_mask = detect_changes(args.original_image, args.changed_image)
 
-    plt.figure(figsize=(20, 15))  # Increase figure size
+    segmented_mask_original_image = run_inference(model, args.original_image, args.patch_size)
+    segmented_mask_original_image = cv2.resize(segmented_mask_original_image, (change_mask.shape[1], change_mask.shape[0]))
+    segmented_mask_changed_image = run_inference(model, args.changed_image, args.patch_size)
+    segmented_mask_changed_image = cv2.resize(segmented_mask_changed_image, (change_mask.shape[1], change_mask.shape[0]))
+
+
+    plt.figure(figsize=(15, 10))
 
     plt.subplot(2, 2, 1)
-    plt.imshow(cv2.imread(args.image_path1))
-    plt.title('Original Image 1')
+    plt.imshow(cv2.imread(args.original_image))
+    plt.title('Original Image')
 
     plt.subplot(2, 2, 2)
-    plt.imshow(cv2.imread(args.image_path2))
-    plt.title('Original Image 2')
+    plt.imshow(cv2.imread(args.changed_image))
+    plt.title('Changed image')
 
     plt.subplot(2, 2, 3)
     plt.imshow(change_mask, cmap='gray')
     plt.title('Detected Changes')
 
     plt.subplot(2, 2, 4)
-    plt.imshow(decode_segmentation_mask(segmented_mask_image_path1), alpha=0.5)
-    plt.imshow(decode_segmentation_mask(segmented_mask_image_path2), alpha=0.5)
+    plt.imshow(decode_segmentation_mask(segmented_mask_original_image), alpha=0.5)
+    plt.imshow(decode_segmentation_mask(segmented_mask_changed_image), alpha=0.5)
     plt.imshow(change_mask, cmap='gray', alpha=0.5)
     plt.title('Overlay of Changes and Segmentation')
 
-    plt.tight_layout()  # Adjust layout to prevent overlap
     plt.show()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Change detection arguments')
+    parser = argparse.ArgumentParser(description='Change detection and segmentation visualization')
     parser.add_argument("--model_path", type=str, required=True, help="Path to the segmentation model")
-    parser.add_argument("--image_path1", type=str, required=True, help="Path to the 1st input image.")
-    parser.add_argument("--image_path2", type=str, required=True, help="Path to the 2nd input image.")
+    parser.add_argument("--original_image", type=str, required=True, help="Path to the original image.")
+    parser.add_argument("--changed_image", type=str, required=True, help="Path to the changed image.")
     parser.add_argument("--patch_size", type=int, default=256, help="Patch sizes")
 
     args = parser.parse_args()
