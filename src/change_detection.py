@@ -1,8 +1,9 @@
 import argparse
 
 import cv2
+from matplotlib import pyplot as plt
 
-from src.inference_segment import run_inference
+from src.inference_segment import run_inference, decode_segmentation_mask
 from src.utils import load_model_for_inference
 
 
@@ -26,6 +27,29 @@ def main(args):
 
     segmented_mask_image_path1 = run_inference(model=model, image_path=args.image_path1, patch_size=args.patch_size)
     segmented_mask_image_path2 = run_inference(model=model, image_path=args.image_path2, patch_size=args.patch_size)
+
+    plt.figure(figsize=(20, 15))  # Increase figure size
+
+    plt.subplot(2, 2, 1)
+    plt.imshow(cv2.imread(args.image_path1))
+    plt.title('Original Image 1')
+
+    plt.subplot(2, 2, 2)
+    plt.imshow(cv2.imread(args.image_path2))
+    plt.title('Original Image 2')
+
+    plt.subplot(2, 2, 3)
+    plt.imshow(change_mask, cmap='gray')
+    plt.title('Detected Changes')
+
+    plt.subplot(2, 2, 4)
+    plt.imshow(decode_segmentation_mask(segmented_mask_image_path1), alpha=0.5)
+    plt.imshow(decode_segmentation_mask(segmented_mask_image_path2), alpha=0.5)
+    plt.imshow(change_mask, cmap='gray', alpha=0.5)
+    plt.title('Overlay of Changes and Segmentation')
+
+    plt.tight_layout()  # Adjust layout to prevent overlap
+    plt.show()
 
 
 if __name__ == "__main__":

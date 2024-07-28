@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler()
 
 
-def preprocess(img_path: str, dataset: list[np.ndarray], patch_size: int):
+def preprocess(img_path: str, dataset: list[np.ndarray], patch_size: int, resizing: str):
     """
     Preprocesses an image by reading, converting to RGB, resizing, and splitting it into patches.
 
@@ -21,6 +21,8 @@ def preprocess(img_path: str, dataset: list[np.ndarray], patch_size: int):
         List to append the image patches to.
     patch_size: int
         Size of the patches to split the image into.
+    resizing: str
+        Resizing method.
 
     Returns
     -------
@@ -28,10 +30,15 @@ def preprocess(img_path: str, dataset: list[np.ndarray], patch_size: int):
     """
     img = cv2.imread(img_path, 1)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    SIZE_X = (img.shape[1] // patch_size) * patch_size
-    SIZE_Y = (img.shape[0] // patch_size) * patch_size
-    img = Image.fromarray(img)
-    img = img.crop((0, 0, SIZE_X, SIZE_Y))
+    size_x = (img.shape[1] // patch_size) * patch_size
+    size_y = (img.shape[0] // patch_size) * patch_size
+    if resizing == "crop":
+        img = Image.fromarray(img)
+        img = img.crop((0, 0, size_x, size_y))
+    elif resizing == "resize":
+        img = cv2.resize(img, (img.shape[1], img.shape[0]))
+    else:
+        raise Exception("Invalid resizing method. Choose between 'crop' or 'resize'.")
     img = np.array(img)
     patches = patchify(img, (patch_size, patch_size, 3), step=patch_size)
     for i in range(patches.shape[0]):
@@ -63,11 +70,12 @@ def load_images(root_directory: str, patch_size: int):
         if dirname == 'images':
             images = os.listdir(path)
             for image_name in images:
-                if image_name.endswith(".jpg"):
+                if image_name.endswith((".jpg", ".jpeg", ".png")):
                     image_path = os.path.join(path, image_name)
                     dataset, _ = preprocess(img_path=image_path,
                                             dataset=dataset,
-                                            patch_size=patch_size)
+                                            patch_size=patch_size,
+                                            resizing="crop")
     return np.array(dataset)
 
 
@@ -92,9 +100,10 @@ def load_masks(root_directory: str, patch_size: int):
         if dirname == 'masks':
             masks = os.listdir(path)
             for mask_name in masks:
-                if mask_name.endswith(".png"):
+                if mask_name.endswith((".jpg", ".jpeg", ".png")):
                     mask_path = os.path.join(path, mask_name)
                     dataset, _ = preprocess(img_path=mask_path,
                                             dataset=dataset,
-                                            patch_size=patch_size)
+                                            patch_size=patch_size,
+                                            resizing="crop")
     return np.array(dataset)

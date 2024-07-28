@@ -1,9 +1,9 @@
+import argparse
 from typing import Tuple
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import argparse
 
 from src.preprocessing import preprocess
 from src.utils import load_model_for_inference, class_colors
@@ -54,7 +54,8 @@ def run_inference(model, image_path: str, patch_size: int):
     """
     preprocessed_image, original_shape = preprocess(img_path=image_path,
                                                     dataset=[],
-                                                    patch_size=patch_size)
+                                                    patch_size=patch_size,
+                                                    resizing="resize")
     preprocessed_image = np.array(preprocessed_image)
 
     preprocessed_image = preprocessed_image.reshape((-1, patch_size, patch_size, 3))
@@ -100,12 +101,13 @@ def main(args):
     """
     model = load_model_for_inference(args.model_path)
 
-    predicted_mask = run_inference(model=model, image_path=args.image_path, patch_size=args.patch_size)
-
-    decoded_mask = decode_segmentation_mask(predicted_mask)
-
     original_image = cv2.imread(args.image_path, 1)
     original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+
+    predicted_mask = run_inference(model=model, image_path=args.image_path, patch_size=args.patch_size)
+    predicted_mask = cv2.resize(predicted_mask, (original_image.shape[1], original_image.shape[0]))
+
+    decoded_mask = decode_segmentation_mask(predicted_mask)
 
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
