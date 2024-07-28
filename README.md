@@ -23,5 +23,10 @@ poetry install
 ## Training the Model
 To start training the model, execute the following command:
 ```bash
-python -m src.train
+python -m src.train --root_directory datasets/aerial_image_segmentation/ --save_path models/segmentation_model.h5
+```
+
+## Running inference on a single image
+```bash
+python -m src.inference --model_path models/unet_100_epochs.h5 --image_path 'datasets/aerial_image_segmentation/Tile 1/images/image_part_001.jpg'
 ```

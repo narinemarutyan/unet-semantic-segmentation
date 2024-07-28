@@ -1,16 +1,8 @@
-import tensorflow.keras.backend as K
 from keras.layers import Input, Conv2D, MaxPooling2D, concatenate, Conv2DTranspose, Dropout
 from keras.models import Model
 
 
-def jacard_coef(y_true, y_pred):
-    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    sum_ = K.sum(K.abs(y_true) + K.abs(y_pred), axis=-1)
-    jac = (intersection + 1e-15) / (sum_ - intersection + 1e-15)
-    return jac
-
-
-def multi_unet_model(n_classes: int, img_height: int = 256, img_width: int = 256, img_channels: int = 1) -> Model:
+def multi_unet_model(n_classes: int, img_height: int, img_width: int, img_channels: int) -> Model:
     """
     Construct Unet model for semantic segmentation
 
@@ -18,11 +10,11 @@ def multi_unet_model(n_classes: int, img_height: int = 256, img_width: int = 256
     ----------
     n_classes: int
         Number of classes for the output segmentation mask.
-    img_height: int = 256
+    img_height: int
         Height of the input images.
-    img_width: int = 256
+    img_width: int
         Width of the input images.
-    img_channels: int = 1
+    img_channels: int
         Number of channels in the input images.
 
     Returns

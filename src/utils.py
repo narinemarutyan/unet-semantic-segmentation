@@ -3,14 +3,29 @@ import os
 import numpy as np
 from keras.src.saving import load_model
 
-from src.model import jacard_coef
+from src.metrics import jaccard_coef
 
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 
 import segmentation_models as sm
 
 
-def rgb_to_2D_label(label, class_colors):
+def rgb_to_2D_label(label: np.ndarray, class_colors: list[np.ndarray]):
+    """
+    Converts an RGB image to a 2D label image where each pixel value corresponds to a class index.
+
+    Parameters
+    ----------
+    label : np.ndarray
+        The RGB image to be converted.
+    class_colors : list of np.ndarray
+        List of RGB colors representing the different classes.
+
+    Returns
+    -------
+    out: np.ndarray
+        A 2D label image where each pixel value corresponds to the class index. Shape will be (H, W).
+    """
     label_seg = np.zeros(label.shape, dtype=np.uint8)
     for idx, color in enumerate(class_colors):
         label_seg[np.all(label == color, axis=-1)] = idx
@@ -18,16 +33,42 @@ def rgb_to_2D_label(label, class_colors):
     return label_seg
 
 
-def dice_loss_plus_1focal_loss():
-    weights = [0.1666, 0.1666, 0.1666, 0.1666, 0.1666, 0.1666]
+def dice_loss_plus_1focal_loss(num_classes: int = 6):
+    """
+    Creates a loss function that combines Dice loss and Categorical Focal loss.
+
+    Parameters
+    ----------
+    num_classes : int, optional
+        The number of classes. Default is 6.
+
+    Returns
+    -------
+    out: Callable
+        A loss function that combines Dice loss and Categorical Focal loss.
+    """
+    weights = [1 / num_classes] * num_classes
     dice_loss = sm.losses.DiceLoss(class_weights=weights)
     focal_loss = sm.losses.CategoricalFocalLoss()
     return dice_loss + (1 * focal_loss)
 
 
-def load_model_for_inference(path):
+def load_model_for_inference(path: str):
+    """
+    Loads a model for inference with custom objects.
+
+    Parameters
+    ----------
+    path : str
+        The path to the model file.
+
+    Returns
+    -------
+    keras.Model
+        The loaded Keras model.
+    """
     model = load_model(path, custom_objects={
-        "jacard_coef": jacard_coef,
+        "jaccard_coef": jaccard_coef,
         "dice_loss_plus_1focal_loss": dice_loss_plus_1focal_loss,
         "DiceLoss": sm.losses.DiceLoss,
         "CategoricalFocalLoss": sm.losses.CategoricalFocalLoss
