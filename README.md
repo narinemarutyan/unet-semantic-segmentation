@@ -25,6 +25,10 @@ To start training the model, execute the following command:
 ```bash
 python -m src.train --root_directory "datasets/aerial_image_segmentation" --save_path "models/segmentation_model.h5"
 ```
+For tracking the training process run 
+```bash
+tensorboard --logdir=logs
+```
 
 ## Running segmentation inference on a single image
 ```bash
