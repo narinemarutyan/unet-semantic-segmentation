@@ -26,7 +26,13 @@ To start training the model, execute the following command:
 python -m src.train --root_directory datasets/aerial_image_segmentation/ --save_path models/segmentation_model.h5
 ```
 
-## Running inference on a single image
+## Running segmentation inference on a single image
 ```bash
-python -m src.inference --model_path models/unet_100_epochs.h5 --image_path 'datasets/aerial_image_segmentation/Tile 1/images/image_part_001.jpg'
+python -m src.inference_segment --model_path models/unet_100_epochs.h5 --image_path "datasets/aerial_image_segmentation/Tile 1/images/image_part_001.jpg"
 ```
+
+## Running change detection inference
+```bash
+python -m src.change_detection --image_path1 changed_image.jpg --image_path2 original_image.jpg --model_path models/unet_100_epochs.h5 
+```
+

@@ -118,7 +118,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Segmentation model training arguments.')
+    parser = argparse.ArgumentParser(description='Segmentation model inference arguments.')
     parser.add_argument("--patch_size", type=int, default=256, help="Size of the image patches.")
     parser.add_argument("--model_path", type=str, required=True, help="Path to the model file.")
     parser.add_argument("--image_path", type=str, required=True, help="Path to the input image file.")
