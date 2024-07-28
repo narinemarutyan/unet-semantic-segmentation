@@ -1,4 +1,5 @@
 import argparse
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,25 +38,15 @@ def run_inference(model, image_path: str, patch_size: int) -> np.ndarray:
     return full_mask
 
 
-def main(args):
-    model = load_model_for_inference(args.model_path)
-
-    change_mask = detect_changes(args.original_image, args.changed_image)
-
-    segmented_mask_original_image = run_inference(model, args.original_image, args.patch_size)
-    segmented_mask_original_image = cv2.resize(segmented_mask_original_image, (change_mask.shape[1], change_mask.shape[0]))
-    segmented_mask_changed_image = run_inference(model, args.changed_image, args.patch_size)
-    segmented_mask_changed_image = cv2.resize(segmented_mask_changed_image, (change_mask.shape[1], change_mask.shape[0]))
-
-
+def plot_differences(original_image, changed_image, change_mask, segmented_mask):
     plt.figure(figsize=(15, 10))
 
     plt.subplot(2, 2, 1)
-    plt.imshow(cv2.imread(args.original_image))
+    plt.imshow(original_image)
     plt.title('Original Image')
 
     plt.subplot(2, 2, 2)
-    plt.imshow(cv2.imread(args.changed_image))
+    plt.imshow(changed_image)
     plt.title('Changed image')
 
     plt.subplot(2, 2, 3)
@@ -63,12 +54,64 @@ def main(args):
     plt.title('Detected Changes')
 
     plt.subplot(2, 2, 4)
-    plt.imshow(decode_segmentation_mask(segmented_mask_original_image), alpha=0.5)
-    plt.imshow(decode_segmentation_mask(segmented_mask_changed_image), alpha=0.5)
+    plt.imshow(segmented_mask, alpha=0.5)
     plt.imshow(change_mask, cmap='gray', alpha=0.5)
     plt.title('Overlay of Changes and Segmentation')
-    # plt.savefig("change_detection.png")
+    plt.savefig('results/difference.png')
     plt.show()
+
+
+def plot_changes(original_image, changed_image, change_mask, segmented_mask):
+    white_mask = (change_mask == 255)
+    black_mask = (change_mask == 0)
+
+    output_image = np.zeros_like(segmented_mask)
+
+    output_image[white_mask] = segmented_mask[white_mask]
+
+    output_image[black_mask] = original_image[black_mask]
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+
+    ax1.imshow(original_image)
+    ax1.set_title('Original Image')
+
+    ax2.imshow(changed_image)
+    ax2.set_title('Changed Image')
+
+    ax3.imshow(output_image)
+    ax3.set_title('Detected Change with its Class')
+
+    plt.tight_layout()
+    plt.savefig('results/detect_change.png')
+    plt.show()
+
+
+def main(args):
+    model = load_model_for_inference(args.model_path)
+
+    change_mask = detect_changes(args.original_image, args.changed_image)
+
+    original_image = cv2.imread(args.original_image)
+    original_image = cv2.resize(original_image, (change_mask.shape[1], change_mask.shape[0]))
+
+    changed_image = cv2.imread(args.changed_image)
+    changed_image = cv2.resize(changed_image, (change_mask.shape[1], change_mask.shape[0]))
+
+    segmented_mask_original_image = run_inference(model, args.original_image, args.patch_size)
+    segmented_mask_original_image = cv2.resize(segmented_mask_original_image,
+                                               (change_mask.shape[1], change_mask.shape[0]))
+    segmented_mask_original_image = decode_segmentation_mask(segmented_mask_original_image)
+
+    plot_changes(original_image=original_image,
+                 changed_image=changed_image,
+                 change_mask=change_mask,
+                 segmented_mask=segmented_mask_original_image)
+
+    plot_differences(original_image=original_image,
+                     changed_image=changed_image,
+                     change_mask=change_mask,
+                     segmented_mask=segmented_mask_original_image)
 
 
 if __name__ == "__main__":

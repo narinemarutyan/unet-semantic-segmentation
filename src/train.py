@@ -69,7 +69,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Segmentation model training arguments.')
     parser.add_argument('--root_directory', type=str, help='Root directory of the dataset.')
     parser.add_argument('--n_classes', type=int, default=6, help='Number of classes.')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch size for training.')
+    parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training.')
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs for training.')
     parser.add_argument('--patch_size', type=int, default=256, help='Patch size for data preprocessing.')
     parser.add_argument('--save_path', type=str, help='Path to save the trained model.')
