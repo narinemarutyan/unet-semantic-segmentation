@@ -44,5 +44,3 @@ python -m src.change_detection --model_path "models/unet_100_epochs.h5" --origin
 <img src="results/difference.png" width="600">
 
 <img src="results/detect_change.png" width="600">
-
-#### Ps. obviously segmentation model's accuracy is not great, since more time is needed for hyperparameter tuning for the model. However, in general the structure is something like this.
